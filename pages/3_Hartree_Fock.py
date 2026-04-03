@@ -97,7 +97,7 @@ with tab_teoria:
     #### 2. LCAO-approksimaatio ja GTO:t
     Molekyylin aaltofunktio muodostuu molekyyliorbitaaleista ($\psi_i$). Koska emme tiedä niiden muotoa, rakennamme ne atomeilla olevista kantafunktioista ($\phi_\mu$):
     $$ \psi_i = \sum_{\mu} C_{\mu i} \phi_\mu $$
-    Fysikaalisesti tarkimmat kantafunktiot olisivat Slater-tyyppisiä (STO), mutta niiden integraalit ovat matematiikalle todella raskaita. Siksi sovelluksemme käyttää STO-3G -kantajoukkoa, jossa jokainen STO-orbitaali on sovitettu kolmen Gaussin funktion summaksi (GTO). Gaussin funktiot eivät ole aivan tarkkoja ytimen lähellä (niiltä puuttuu matemaattinen 'cusp' eli kärki), mutta ne nopeuttavat laskentaa eksponentiaalisesti.
+    Fysikaalisesti tarkimmat kantafunktiot olisivat Slater-tyyppisiä (STO), mutta niiden integraalit ovat todella työläitä ratkaista. Siksi sovelluksemme käyttää STO-3G -kantajoukkoa, jossa jokainen STO-orbitaali on sovitettu kolmen Gaussin funktion summaksi (GTO). Gaussin funktiot eivät ole aivan tarkkoja ytimen lähellä (niiltä puuttuu matemaattinen 'cusp' eli kärki), mutta ne nopeuttavat laskentaa eksponentiaalisesti.
 
     #### 3. Hartree-Fock -yhtälö ja Variaatioperiaate
     Haluamme löytää sellaiset kertoimet $C_{\mu i}$, jotka antavat järjestelmälle matalimman mahdollisen energian. Tämä perustuu kvanttimekaniikan **variaatioperiaatteeseen**, jonka mukaan mikään arvaus ei voi antaa alempaa energiaa kuin todellinen, täydellinen aaltofunktio.
