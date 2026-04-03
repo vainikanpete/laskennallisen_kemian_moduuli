@@ -146,7 +146,7 @@ elif pot_type == "Säännöllinen kidehila":
 with st.spinner("Ratkaistaan Hamiltonin matriisia..."):
     eigvals, eigvecs = solve_schrodinger_1d(x, V, mass, d, norbs)
 
-tab1, tab2, tab3 = st.tabs(["Ohjeet (Instructions)", "Aaltofunktiot", "Odotusarvot"])
+tab1, tab2, tab3 = st.tabs(["Ohjeet", "Aaltofunktiot", "Odotusarvot"])
 
 with tab1:
     st.subheader("Yleistä")
