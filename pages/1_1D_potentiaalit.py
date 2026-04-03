@@ -166,17 +166,17 @@ Aloita valitsemalla potentiaalityyppi ja säätämällä parametreja. Siirry Aal
 
 Tässä moduulissa voit tutkia tavanomaisten potentiaalikaivojen lisäksi kolmea fysiikan ja kemian kannalta tärkeää potentiaalimallia, joista ensimmäinen lieneekin jo tuttu:
 
-**1. Harmoninen värähtelijä (Harmonic Oscillator)** $V(x) = \\frac{1}{2}kx^2$  
-Kvanttimekaaninen harmoninen värähtelijä on yksi modernin fysiikan tärkeimmistä malleista. Se kuvaa hiukkasta, johon kohdistuu Hooken lain mukainen palauttava voima (kuten jousi). Kemiassa tätä käytetään mallintamaan molekyylien välisten sidosten värähtelyä lähellä niiden tasapainoetäisyyttä (esim. IR-spektroskopia).  
+**1. Harmoninen värähtelijä** $V(x) = \\frac{1}{2}kx^2$  
+Kvanttimekaaninen harmoninen värähtelijä on yksi modernin fysiikan tärkeimmistä malleista. Se kuvaa hiukkasta, johon kohdistuu Hooken lain mukainen palauttava voima. Kemiassa tätä käytetään mallintamaan molekyylien välisten sidosten värähtelyä lähellä niiden tasapainoetäisyyttä (esim. IR-spektroskopia).  
 * **Erityispiirre:** Energiatasot ovat täysin tasavälein ($E_n = \hbar\omega(n + 1/2)$). Lisäksi huomaat, että alin energiataso ei ole koskaan nolla (ns. nollapiste-energia), mikä on suora seuraus Heisenbergin epätarkkuusperiaatteesta.
 
-**2. Morse-potentiaali (Morse Potential)** $V(x) = D_e(1 - e^{-\\alpha (x - r_e)})^2$  
-Harmoninen malli on vain approksimaatio, sillä oikeaa vieteriä ei voi venyttää loputtomiin – kemialliset sidokset katkeavat. Morse-potentiaali on realistisempi malli kaksiatomisen molekyylin värähtelylle. Se huomioi epäharmonisuuden ja sidoksen dissosiaation (hajoamisen).  
+**2. Morse-potentiaali** $V(x) = D_e(1 - e^{-\\alpha (x - r_e)})^2$  
+Harmoninen malli on vain approksimaatio, sillä oikeaa vieteriä ei voi venyttää loputtomiin – kemialliset sidokset katkeavat. Morse-potentiaali on realistisempi malli kaksiatomisen molekyylin värähtelylle. Se huomioi epäharmonisuuden ja sidoksen hajoamisen.  
 *Huom: Tässä simulaatiossa oletamme yksinkertaisuuden vuoksi, että tasapainoetäisyys $r_e = 0$.*
 * **Erityispiirre:** Kun energia kasvaa (mennään ylemmille tiloille), energiatasot pakkautuvat yhä tiheämmin yhteen. Kun energia ylittää dissosiaatioenergian ($D_e$), sidos katkeaa ja hiukkanen on vapaa.
 
 **3. Säännöllinen kidehila (Kronig-Penney -tyyppinen malli)** Tämä potentiaali mallintaa elektronin liikettä säännöllisessä kidehilassa (esim. metallijohdin tai puolijohde). Jaksollisesti toistuvat kanttiaaltomaiset potentiaalikaivot edustavat säännöllisin välimatkoin sijaitsevia positiivisesti varautuneita atomiytimiä, jotka vetävät elektronia puoleensa.  
-* **Erityispiirre:** Kun aaltofunktio venyy usean kaivon yli, kaivojen väliset vuorovaikutukset saavat yksittäiset energiatasot jakautumaan. Jos kasvatat tilojen määrää, näet kuinka tasot alkavat muodostaa tiheitä ryppäitä eli **energiavöitä** (allowed bands), joiden väliin jää tyhjiä **vyöaukkoja** (band gaps). Tämä on koko modernin puolijohdefysiikan (ja tietokoneiden) perusta!
+* **Erityispiirre:** Kun aaltofunktio venyy usean kaivon yli, kaivojen väliset vuorovaikutukset saavat yksittäiset energiatasot jakautumaan. Jos kasvatat tilojen määrää, näet kuinka tasot alkavat muodostaa tiheitä ryppäitä eli **energiavöitä** (eng. allowed bands), joiden väliin jää tyhjiä **vyöaukkoja** (eng. band gaps). Tämä on koko modernin puolijohdefysiikan perusta!
 
     """)
 
@@ -219,7 +219,7 @@ with tab2:
 with tab3:
     st.subheader("Tilojen odotusarvot ja epätarkkuusperiaate")
     
-    st.info("💡 **Huomio yksiköistä:** Tämä ohjelma käyttää laskennallisen kemian standardia eli **atomiyksiköitä (atomic units, a.u.)**. Näissä yksiköissä Planckin vakio $\hbar = 1$ ja elektronin massa $m_e = 1$. Tämä yksinkertaistaa yhtälöitä huomattavasti.")
+    st.info("💡 **Huomio yksiköistä:** Tämä ohjelma käyttää laskennallisen kemian standardia eli **atomiyksiköitä (eng. atomic units, lyh. a.u.)**. Näissä yksiköissä Planckin vakio $\hbar = 1$ ja elektronin massa $m_e = 1$. Tämä yksinkertaistaa yhtälöitä huomattavasti.")
 
     st.markdown("""
     **Merkintöjen selitykset:**
@@ -228,7 +228,7 @@ with tab3:
     * $\langle p \\rangle$: Liikemäärän odotusarvo. Koska ratkaisemme reaalisia stationääritiloja (seisovia aaltoja) symmetrisissä reunaehdoissa, hiukkanen ei etene keskimäärin kumpaankaan suuntaan ($\langle p \\rangle = 0$).
     * $\Delta x$: Sijainnin epätarkkuus eli keskihajonta ($\sqrt{\langle x^2 \\rangle - \langle x \\rangle^2}$).
     * $\Delta p$: Liikemäärän epätarkkuus eli keskihajonta ($\sqrt{\langle p^2 \\rangle - \langle p \\rangle^2}$). Tämä **ei** ole nolla, koska hiukkasella on kineettistä energiaa ($\langle p^2 \\rangle > 0$).
-    * $\Delta x \Delta p$: Heisenbergin epätarkkuustulo. Kvanttimekaniikan mukaan tämän on aina oltava vähintään $\hbar/2$. Koska olemme atomiyksiköissä ($\hbar=1$), numeerisen alarajan pitäisi olla tasan $0.5$.
+    * $\Delta x \Delta p$: Heisenbergin epätarkkuustulo. Kvanttimekaniikan mukaan tämän on aina oltava vähintään $\hbar/2$. Koska käytämme atomiyksiköitä ($\hbar=1$), numeerinen alaraja on tasan $0.5$.
     """)
     st.divider()
     
@@ -261,7 +261,7 @@ with st.expander("Kysymyksiä ja huomioita"):
     st.write("""
     1. **Kvantittuminen:** Kuinka energiatasojen välimatka muuttuu, kun kasvatat hiukkasen massaa tai levennät potentiaalikaivoa?
     2. **Tunneloituminen:** Tarkastele äärellistä kaivoa. Huomaatko, kuinka aaltofunktio ei putoa nollaan kaivon reunoilla, vaan tunkeutuu klassisesti kielletylle alueelle?
-    3. **Epätarkkuusperiaate:** Katso Odotusarvot-välilehteä. Toteutuuko Heisenbergin epätarkkuusperiaate ($\ge 0.5$) kaikilla laskemillasi tiloilla? Kokeile kaventaa kaivon leveyttä (L tai Width); mitä tapahtuu $\Delta p$:lle, kun pakotat hiukkasen tarkempaan sijaintiin ($\Delta x$ pienenee)?
-    4. **Solmukohdat:** Laske kunkin aaltofunktion nollakohdat (solmut). Mikä sääntö yhdistää tilan järjestysnumeron ja solmujen määrän?
+    3. **Epätarkkuusperiaate:** Katso Odotusarvot-välilehteä. Toteutuuko Heisenbergin epätarkkuusperiaate ($\ge 0.5$) kaikilla laskemillasi tiloilla? Kokeile kaventaa kaivon leveyttä (L); mitä tapahtuu $\Delta p$:lle, kun pakotat hiukkasen tarkempaan sijaintiin ($\Delta x$ pienenee)?
+    4. **Solmukohdat:** Laske kunkin aaltofunktion nollakohdat (solmut, joskus puhutaan noodeista). Mikä sääntö yhdistää tilan järjestysnumeron ja solmujen määrän?
     5. **Harmoninen värähtelijä:** Huomaatko, että alin energiataso ei ole koskaan nolla (nollapiste-energia)? Kokeile kasvattaa jousivakiota (k). Mitä tapahtuu energiatasojen välimatkalle?
     """)

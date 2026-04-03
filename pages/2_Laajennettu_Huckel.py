@@ -33,14 +33,14 @@ with tab_teoria:
     1. **Kantafunktiot:** Vain valenssiorbitaalit otetaan mukaan. Sisäkuorten elektronit oletetaan passiiviseksi ytimeksi.
     2. **Diagonaalielementit ($H_{ii}$):** Atomin oman orbitaalin energia. Tähän käytetään suoraan atomin **VOIP-arvoa** (Valence Orbital Ionization Potential), joka on kokeellisesti mitattu ionisaatioenergia.
     3. **Peittomatriisi ($S_{ij}$):** Orbitaalien välinen spatiaalinen peittyminen lasketaan tarkasti. Mitä lähempänä vuorovaikuttavat hituset (atomit/ionit) ovat, sitä suurempi $S$.
-    4. **Päälävistäjän ulkopuoliset elementit ($H_{ij}$):** Atomien välinen vuorovaikutus (resonanssi/sidos) lasketaan **Wolfsberg-Helmholtz -approksimaatiolla**:
+    4. **Lävistäjän ulkopuoliset elementit ($H_{ij}$):** Atomien välinen vuorovaikutus (resonanssi/sidos) lasketaan **Wolfsberg-Helmholtz -approksimaatiolla**:
        $H_{ij} = K \cdot S_{ij} \\frac{H_{ii} + H_{jj}}{2}$
        Tässä $K$ on empiirinen vakio (yleensä 1.75).
 
     ### Kantafunktiot: STO vs. GTO
     Aaltofunktioita mallinnetaan tietokoneessa kantafunktioilla. Kaksi päätyyppiä ovat:
     
-    * **Slater-tyyppiset orbitaalit (Slater Type Orbitals, STO, $e^{-\zeta r}$):** Fyysisesti erittäin tarkkoja. Niillä on terävä kärki (cusp) atomin ytimen kohdalla ja ne suppenevat etäisyyden kasvaessa juuri kuten oikeatkin elektronipilvet. Ongelma: Monikeskisten integraalien laskeminen STO:illa on matemaattisesti raskasta. **EHT käyttää STO-funktioita**, koska siinä lasketaan vain helppoja kahden keskuksen peittymisintegraaleja ($S_{ij}$).
+    * **Slater-tyyppiset orbitaalit (Slater Type Orbitals, STO, $e^{-\zeta r}$):** Fyysisesti erittäin tarkkoja. Niillä on terävä kärki (cusp) atomin ytimen kohdalla ja ne suppenevat etäisyyden kasvaessa juuri kuten oikeatkin elektronipilvet. Ongelma: Monikeskisten integraalien laskeminen STO:illa on matemaattisesti raskasta. **EHT käyttää STO-funktioita**, koska siinä lasketaan vain helppoja kahden keskuksen peittointegraaleja ($S_{ij}$).
     
     * **Gaussin orbitaalit (Gaussian Type Orbital, $e^{-\\alpha r^2}$):**
       Fyysisesti hieman vääriä (liian nopeasti suppeneva), mutta niillä on hyödyllinen matemaattinen ominaisuus: kahden GTO:n tulo on aina uusi GTO. Tämä tekee miljoonien integraalien laskemisesta tietokoneella mukavaa, käytännöllistä ja nopeaa. **Hartree-Fock ja moderni DFT käyttävätkin usein GTO-funktioita.**
@@ -50,9 +50,9 @@ with tab_mo:
     st.markdown("""
     ### Kahden orbitaalin vuorovaikutus
     Tämä työkalu ratkaisee yleisen $A-B$ sidoksen MO-diagramminmatriisimuotoisen ajasta riippumattoman Schrödingerin yhtälön HC=ESC avulla.
-    Voit säätää atomien energioita ja peittymisintegraalia ja nähdä kaksi MO-teorian perussääntöä:
+    Voit säätää atomien energioita ja peittointegraalia ja nähdä kaksi MO-teorian perussääntöä:
     1. Sitova orbitaali saa enemmän luonnetta elektronegatiivisemmalta (alempana olevalta) atomilta. Hajottava orbitaali saa enemmän luonnetta elektropositiivisemmalta atomilta.
-    2. Jos peittointegraali $S > 0$, hajottava tila nousee ylöspäin **enemmän** kuin sitova tila laskee alaspäin (sterinen repulsio).
+    2. Jos peittointegraali $S > 0$, hajottava tila nousee ylöspäin **enemmän** kuin sitova tila laskee alaspäin (steerinen repulsio).
     """)
     
     col_ctrl, col_plot = st.columns([1, 2.5])
@@ -148,5 +148,5 @@ with tab_mo:
             st.write("""
             * **Homonukleaarinen sidos ($H_2$, $N_2$ jne):** Aseta Atomien A ja B energiat tismalleen samoiksi. Huomaatko, kuinka sitovan orbitaalin yhdistävät viivat ovat yhtä paksut molemmille puolille? Tämä tarkoittaa 100% kovalenttista sidosta, jossa elektronit jaetaan tasan.
             * **Polarisaatio:** Laske Atomin B energiaa (esim. atomin A = H ja B = F). Sitova orbitaali painuu lähemmäs atomin B energiaa, ja B:ltä tuleva viiva paksunee. Sidoksen ioniluonne on nyt kasvanut ja elektronitiheys on siirtynyt lähemmäs B:tä!
-            * **Steerinen repulsio ($S > 0$):** Aseta energiat samoiksi ja liikuta peittymisintegraalin $S$ arvoa nollasta ylöspäin. Huomaat, että hajottava tila nousee nopeammin ylös kuin sitova tila laskee alas. Siksi kahden jalokaasuatomin (kuten $He_2$) vuorovaikutus on repulsiivinen!
+            * **Steerinen repulsio ($S > 0$):** Aseta energiat samoiksi ja liikuta peittointegraalin $S$ arvoa nollasta ylöspäin. Huomaat, että hajottava tila nousee nopeammin ylös kuin sitova tila laskee alas. Siksi kahden jalokaasuatomin (kuten $He_2$) vuorovaikutus on repulsiivinen!
             """)
