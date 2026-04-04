@@ -158,7 +158,7 @@ colors = {'1s': '#1f77b4', '2s': '#ff7f0e', '2p': '#2ca02c',
 
 with tab1:
     st.subheader(f"Säteittäinen aaltofunktio $R(r)$ atomille {atno_to_element[Z]}")
-    st.markdown("Gram-Schmidt ortogonalisoidut aaltofunktiot. Nyt näet oikeat säteittäiset solmukohdat ($R(r) = 0$)!")
+    st.markdown("Gram-Schmidt ortogonalisoidut aaltofunktiot.")
     
     fig1 = go.Figure()
     max_1s = None
