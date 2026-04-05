@@ -483,7 +483,7 @@ with tab_laskenta:
         with col_ctrl:
             selected_orb_label = st.selectbox("Valitse piirrettävä orbitaali", list(orb_options.keys()))
             selected_orb_idx = orb_options[selected_orb_label]
-            isovalue = st.slider("Isopinnan arvo (Isovalue)", 0.01, 0.10, 0.03, 0.01)
+            isovalue = st.slider("Isopinnan arvo (Isovalue)", 0.001, 0.100, 0.025, 0.005)
 
         with col_plot:
             with st.spinner("Rakennetaan .cube-tiedostoa stmol-kirjastoa varten..."):
