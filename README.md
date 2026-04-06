@@ -62,5 +62,5 @@ Varmista, että koneellasi on Python 3.9 tai uudempi.
     Sovellus aukeaa automaattisesti selaimesi osoitteeseen http://localhost:8501
 
 
-4. **Kehittäjä** 
+## Kehittäjä:
     Petteri Vainikka, TY:n alumni vuodelta 2018
