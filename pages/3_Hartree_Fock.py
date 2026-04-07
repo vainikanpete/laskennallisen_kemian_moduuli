@@ -464,19 +464,16 @@ with tab_laskenta:
     # ==========================================
     # VISUALISOINNIT NAPIN PAINALLUKSEN JÄLKEEN
     # ==========================================
-# ==========================================
-    # VISUALISOINNIT NAPIN PAINALLUKSEN JÄLKEEN
-    # ==========================================
     if 'hf_results' in st.session_state:
         res = st.session_state['hf_results']
         
         st.markdown("---")
-        st.subheader("SCF-konvergenssi ja Järjestelmän Energia")
+        st.subheader("SCF:n suppeneminen ja järjestelmän energia")
         
         # 1. Näytetään lopullinen energia isona ja selkeänä (Auttaa tehtävässä 3!)
         final_energy = res['energies'][-1]
         st.metric(label="Lopullinen kokonaisenergia", value=f"{final_energy:.6f} au", 
-                  help="Kokonaisenergia sisältää sekä elektronien liike- ja repulsioenergiat että atomiytimien välisen sähköstaattisen poistovoiman.")
+                  help="Kokonaisenergia sisältää sekä elektronien liike- ja repulsioenergiat että ytimien välisen elektrostaattisen repulsion.")
         
         # 2. Piirretään interaktiivinen konvergenssikuvaaja (Auttaa tehtävässä 2!)
         import plotly.graph_objects as go
