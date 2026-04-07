@@ -126,7 +126,7 @@ with tab_teoria:
 
 with tab_laskenta:
     # ==========================================
-    # 1. KANTAFUNKTIOT JA LITISTYS (FLATTENING)
+    # 1. KANTAFUNKTIOT JA FLATTENING
     # ==========================================
     basis_dict = {
         1: {'exps': [[3.42525091, 0.62391373, 0.1688554]], 
@@ -407,7 +407,7 @@ with tab_laskenta:
                 st.write("**Molekyylin rakenne:**")
                 try:
                     mol_render = load("temp_smiles.xyz")
-                    render(mol_render, output="smiles_preview.png")
+                    render(mol_render, hy=True, output="smiles_preview.png")
                     st.image("smiles_preview.png")
                 except Exception as e:
                     pass
