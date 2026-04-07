@@ -464,9 +464,40 @@ with tab_laskenta:
     # ==========================================
     # VISUALISOINNIT NAPIN PAINALLUKSEN JÄLKEEN
     # ==========================================
+# ==========================================
+    # VISUALISOINNIT NAPIN PAINALLUKSEN JÄLKEEN
+    # ==========================================
     if 'hf_results' in st.session_state:
         res = st.session_state['hf_results']
         
+        st.markdown("---")
+        st.subheader("SCF-konvergenssi ja Järjestelmän Energia")
+        
+        # 1. Näytetään lopullinen energia isona ja selkeänä (Auttaa tehtävässä 3!)
+        final_energy = res['energies'][-1]
+        st.metric(label="Lopullinen kokonaisenergia", value=f"{final_energy:.6f} au", 
+                  help="Kokonaisenergia sisältää sekä elektronien liike- ja repulsioenergiat että atomiytimien välisen sähköstaattisen poistovoiman.")
+        
+        # 2. Piirretään interaktiivinen konvergenssikuvaaja (Auttaa tehtävässä 2!)
+        import plotly.graph_objects as go
+        fig_scf = go.Figure()
+        fig_scf.add_trace(go.Scatter(
+            x=list(range(1, len(res['energies']) + 1)), 
+            y=res['energies'], 
+            mode='lines+markers',
+            name='Kokonaisenergia',
+            marker=dict(size=8, color='#d62728'),
+            line=dict(width=2, color='#1f77b4')
+        ))
+        fig_scf.update_layout(
+            xaxis_title="SCF Iteraatiokierros",
+            yaxis_title="Kokonaisenergia (au)",
+            height=400,
+            hovermode="x unified",
+            margin=dict(l=0, r=0, t=30, b=0)
+        )
+        st.plotly_chart(fig_scf, use_container_width=True)
+
         st.markdown("---")
         st.subheader("3D-visualisointi (Interaktiivinen)")
         st.write("Pyöritä hiirellä, zoomaa rullalla. Näet kuinka kertoimet muovaavat kantafunktioista molekyyliorbitaaleja.")
@@ -517,7 +548,7 @@ with tab_laskenta:
                         st.write(f"**Renderöidään valittu orbitaali:** {selected_orb_label}")
                         
                         if animate_gif:
-                            # zoom < 1.0 loitontaa kameraa, hide_h=False pakottaa vedyt näkyviin
+                            # zoom < 1.0 loitontaa kameraa, hy=True pakottaa vedyt näkyviin
                             render_gif(mol_obj, output="beautiful_orb.gif", gif_rot="y", canvas_size=800, mo=True, hy=True, iso=isovalue)
                             st.image("beautiful_orb.gif", width=1000)
                         else:
