@@ -211,6 +211,11 @@ with tab_laskenta:
 
     st.plotly_chart(fig, use_container_width=True)
 
+    st.sidebar.divider()
+        if st.sidebar.button("🔄 Palauta oletusasetukset"):
+        st.session_state.clear()
+        st.rerun()
+
     # ==========================================
     # 6. PEDAGOGINEN OSIO
     # ==========================================

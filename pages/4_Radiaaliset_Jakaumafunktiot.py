@@ -114,6 +114,10 @@ r_max = st.sidebar.slider("Maksimietäisyys r (Bohr)", 2.0, 20.0, 8.0, 0.5)
 scale_peaks = st.sidebar.checkbox("Skaalaa huiput samaan korkeuteen", value=False, 
                                   help="Helpottaa uloimpien orbitaalien muodon vertailua 1s-orbitaaliin.")
 
+st.sidebar.divider()
+if st.sidebar.button("🔄 Palauta oletusasetukset"):
+    st.session_state.clear()
+    st.rerun()
 # ==========================================
 # 5. LASKENTA JA VISUALISOINTI
 # ==========================================
@@ -212,7 +216,8 @@ with tab2:
         name_label = f"{orb} (skaalattu)" if scale_peaks and orb != '1s' else orb
         
         fig2.add_trace(go.Scatter(x=r, y=plot_y_rdf, mode='lines', name=name_label + integral_text, 
-                                  line=dict(width=3, dash=line_style, color=color), fill='tozeroy', opacity=0.5))
+                                  line=dict(width=3, dash=line_style, color=color), fill='tozeroy', opacity=0.5,
+                                  hovertemplate="<b>%{data.name}</b><br>Etäisyys: %{x:.2f} Bohr<br>P(r): %{y:.4f}<extra></extra>"))
 
     fig2.update_layout(xaxis_title="Etäisyys r (Bohr)", yaxis_title="Todennäköisyystiheys P(r)", height=550, hovermode="x unified")
     st.plotly_chart(fig2, use_container_width=True)

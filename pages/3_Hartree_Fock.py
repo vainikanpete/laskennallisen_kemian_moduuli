@@ -124,6 +124,14 @@ with tab_teoria:
     Tästä syystä ohjelman antamat energiat (au) eivät täsmää täydellisesti oikeiden supertietokoneilla tehtyjen STO-3G Hartree-Fock -laskujen kanssa. Perusfysiikka ja -kemia noudattavat silti täysin oikeita periaatteita!
     """)
 
+    st.info("""
+    **⚠️ Huomioita HF-moduulin antamista tuloksista:**
+    
+    * **Positiiviset orbitaalienergiat:** Oikeassa Hartree-Fock -laskennassa sidotun elektronin energia on negatiivinen. Koska tämä simulaattori käyttää nopeuden vuoksi puoliempiiristä vakiota ydinten vetovoimalle (-1.1), se ei riitä kumoamaan elektronien välistä valtavaa repulsiota. Siksi orbitaalienergiat näkyvät tässä positiivisina. Orbitaalien suhteellinen järjestys ja muoto ovat kuitenkin kemiallisesti loogisia!
+    
+    * **Veden kummallinen HOMO:** Veden ($H_2O$) ylimmän miehitetyn orbitaalin (HOMO) pitäisi olla puhdas hapen $p$-orbitaali (vapaa elektronipari), joka on symmetrinen. Koska ohjelma laskee 2-elektronin repulsiot pallosymmetrisinä s-tyyppisinä funktioina reaaliaikaisuuden takaamiseksi, veden täydellinen $C_{2v}$-symmetria voi rikkoutua. Tämä voi johtaa siihen, että ohjelma näyttää HOMO:na toisen, lievästi asymmetrisen orbitaalin.
+    """)
+
 with tab_laskenta:
     # ==========================================
     # 1. KANTAFUNKTIOT JA FLATTENING

@@ -4,7 +4,7 @@ import scipy.linalg as la
 import plotly.graph_objects as go
 
 # ==========================================
-# 1. UI ASETUKSET
+# 1. UI CONFIGURATION
 # ==========================================
 st.set_page_config(
     page_title="Laajennettu Hückel", 
@@ -16,7 +16,7 @@ st.caption("Semiempiiriset menetelmät ja molekyyliorbitaalidiagrammit")
 st.divider()
 
 # ==========================================
-# 2. VÄLILEHDET
+# 2. TABS
 # ==========================================
 tab_teoria, tab_mo = st.tabs(["Selitykset ja ohjeet", "Interaktiivinen MO-diagrammi"])
 
@@ -59,8 +59,8 @@ with tab_mo:
     
     with col_ctrl:
         st.subheader("Parametrit")
-        alpha_a = st.slider("Atomi A energia $(α_A)$ eV", -25.0, -5.0, -13.6, 0.5)
-        alpha_b = st.slider("Atomi B energia $(α_B)$ eV", -25.0, -5.0, -13.6, 0.5)
+        alpha_a = st.slider("Atomiorbitaalin A energia $(α_A)$ eV", -25.0, -5.0, -13.6, 0.5, help="Tyypillisiä arvoja (eV): H(1s) = -13.6, C(2p) = -11.4, O(2p) = -14.8")
+        alpha_b = st.slider("Atomiorbitaalin B energia $(α_B)$ eV", -25.0, -5.0, -13.6, 0.5)
         
         st.divider()
         S_ab = st.slider("Peittointegraali ($S$)", 0.0, 0.8, 0.3, 0.05, help="S=0 tarkoittaa ortogonaalista Hückel-teoriaa. S>0 on oikeampi EHT.")
