@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import py3Dmol
 import streamlit as st
 from stmol import showmol
+from plot_style import COLORS, initialise, orbital_energy_figure, preset_picker, show_plot
 
 st.set_page_config(page_title="Hartree-Fock", layout="wide")
 
@@ -154,13 +155,25 @@ with tab_teoria:
     """)
 
 with tab_laskenta:
+    initialise({"hf_smiles": "O", "hf_max_iter": 100, "hf_mix": .5, "hf_diis": True})
     col1, col2 = st.columns([1, 2])
     geometry = None
     geometry_error = None
     with col1:
         st.subheader("Järjestelmän asetukset")
+        examples = {}
+        for name, molecule in [("Veden HOMO ja LUMO", "O"), ("Etanoli", "CCO"),
+                               ("Dimetyylieetteri", "COC"), ("Eteeni", "C=C"),
+                               ("Butadieeni", "C=CC=C"), ("Heksatrieeni", "C=CC=CC=C")]:
+            examples[name] = {"hf_smiles": molecule, "hf_charge": 0, "hf_max_iter": 100,
+                              "hf_mix": .5, "hf_diis": True}
+        examples["Vesi: hidas tiheyden sekoitus"] = {
+            "hf_smiles": "O", "hf_charge": 0, "hf_max_iter": 300, "hf_mix": .1, "hf_diis": False}
+        preset_picker("hf", examples, {
+            "Vesi: hidas tiheyden sekoitus": "Vertaa sekoituksen arvoja 0,1 ja 1,0 ilman DIIS-menetelmää."
+        }, container=col1)
         smiles = st.text_input(
-            "Syötä molekyylin SMILES", value="O",
+            "Syötä molekyylin SMILES", key="hf_smiles",
             help="Kokeile: O (vesi), C (metaani), N (ammoniakki), [H][H] (vetymolekyyli).",
         )
         if smiles:
@@ -174,14 +187,14 @@ with tab_laskenta:
         charge = int(st.number_input("Molekyylin varaus", step=1, key="hf_charge"))
         st.markdown("---")
         st.write("SCF-parametrit")
-        max_iter = int(st.number_input("Maksimi iteraatiot", 10, 500, 100, step=10))
+        max_iter = int(st.number_input("Iteraatioiden enimmäismäärä", 10, 500, key="hf_max_iter", step=10))
         mixing = st.slider(
-            "Tiheyden sekoitus (mix)", 0.1, 1.0, 0.5, step=0.1,
+            "Tiheyden sekoitus (mix)", 0.1, 1.0, key="hf_mix", step=0.1,
             help="Uuden tiheyden osuus seuraavalla kierroksella. Pieni arvo vaimentaa "
                  "muutoksia ja usein hidastaa suppenemista; se ei takaa suppenemista.",
         )
         use_diis = st.checkbox(
-            "Nopeuta suppenemista DIIS-menetelmällä", value=True,
+            "Nopeuta suppenemista DIIS-menetelmällä", key="hf_diis",
             help="Poista käytöstä, kun haluat tutkia pelkän tiheyden sekoituksen vaikutusta.",
         )
         st.caption("RHF/STO-3G · suljetun kuoren singletti · yksi voimakenttägeometria")
@@ -244,11 +257,11 @@ with tab_laskenta:
             x=[row["cycle"] for row in res["history"]],
             y=[row["energy"] for row in res["history"]],
             mode="lines+markers", name="Kokonaisenergia",
-            marker=dict(size=7, color="#d62728"), line=dict(color="#1f77b4"),
+            marker=dict(size=7, color=COLORS[0]), line=dict(color=COLORS[0]),
         ))
         fig_scf.update_layout(xaxis_title="SCF-iteraatiokierros (0 = alkutiheys)",
                               yaxis_title="Kokonaisenergia (Eh)", height=400, hovermode="x unified")
-        st.plotly_chart(fig_scf, use_container_width=True)
+        show_plot(fig_scf)
         with st.expander("Suppenemisen tarkistus"):
             last = res["history"][-1]
             st.write(f"Viimeinen energian muutos: {last['delta_energy']:.3e} Eh; "
@@ -257,21 +270,40 @@ with tab_laskenta:
             st.caption("Rajat: |ΔE| < 10⁻⁹ Eh; tiheyden ero ja SCF-jäännös < 10⁻⁷.")
 
         st.markdown("---")
-        st.subheader("3D-visualisointi (Interaktiivinen)")
-        st.write("Pyöritä hiirellä ja zoomaa rullalla. Sininen ja punainen kuvaavat "
-                 "aaltofunktion eri etumerkkejä; isopinta näyttää valitun amplitudin.")
+        st.subheader("Energiatasot ja orbitaalien 3D-näkymä")
         homo, lumo = res["homo_idx"], res["lumo_idx"]
         order = [homo] + ([lumo] if lumo is not None else [])
         order += [index for index in range(res["n_basis"]) if index not in order]
         labels = {}
         for index in order:
             name = "HOMO" if index == homo else "LUMO" if index == lumo else "Orbitaali"
-            labels[f"{name} {index + 1} (E={res['evals'][index]:.6f} Eh)"] = index
+            labels[index] = f"{name} {index + 1} (E={res['evals'][index]:.6f} Eh)"
+        if st.session_state.get("hf_orbital_signature") != signature:
+            st.session_state["hf_orbital_signature"] = signature
+            st.session_state["hf_orbital_index"] = homo
+        selected_index = st.selectbox("Valitse piirrettävä orbitaali", order,
+                                     format_func=labels.get, key="hf_orbital_index")
+        include_core = st.checkbox("Näytä myös sisäkuoren tasot", key="hf_include_core")
+        diagram_key = f"hf_mo_diagram_{signature}"
+
+        def select_level():
+            event = st.session_state.get(diagram_key, {})
+            points = event.get("selection", {}).get("points", [])
+            if points and points[-1].get("customdata"):
+                index = int(points[-1]["customdata"][0])
+                if 0 <= index < res["n_basis"]:
+                    st.session_state["hf_orbital_index"] = index
+
+        show_plot(orbital_energy_figure(res, selected_index, include_core),
+                  key=diagram_key, on_select=select_level, selection_mode="points")
+        st.caption("Valitse energiataso napsauttamalla viivaa tai käyttämällä valikkoa. "
+                   "Violetti taso vastaa alla näkyvää orbitaalia; nuolet kuvaavat miehitystä. "
+                   "Oletusnäkymä rajautuu HOMO:n ja LUMO:n ympärille.")
+        st.write("Pyöritä 3D-mallia hiirellä ja zoomaa rullalla. Sininen ja punainen kuvaavat "
+                 "aaltofunktion eri etumerkkejä; isopinta näyttää valitun amplitudin.")
         controls, viewer = st.columns([1, 2])
         with controls:
-            selected_label = st.selectbox("Valitse piirrettävä orbitaali", list(labels))
-            selected_index = labels[selected_label]
-            isovalue = st.slider("Isopinnan arvo (Isovalue)", 0.001, 0.100, 0.025, 0.005)
+            isovalue = st.slider("Isopinnan amplitudi", 0.001, 0.100, 0.025, 0.005)
         cube_data = cached_cube(res, selected_index)
         with viewer:
             view = py3Dmol.view(width=600, height=500)
@@ -289,7 +321,7 @@ with tab_laskenta:
                       for index, energy in enumerate(res["evals"])])
 
         st.markdown("---")
-        st.subheader("Nätimpi, non-interaktiivinen visualisointi")
+        st.subheader("Orbitaalin kuva tai animaatio")
         if XYZRENDER_AVAILABLE:
             animate_gif = st.checkbox("Animoitu pyörimisliike (GIF) - Tämä kestää kauemmin!")
             if st.button("Renderöi kuva", type="secondary"):
@@ -317,6 +349,7 @@ with tab_laskenta:
         st.markdown(r"""
         **1. Veden HOMO ja LUMO (Symmetria ja sidokset)**
         Laske vedelle (`O`) ja tarkista suppeneminen.
+        * Valitse HOMO ja LUMO energiatasokaaviosta. Mitkä tasot ovat miehitettyjä?
         * Tunnistatko HOMO:ssa hapen vapaan elektroniparin p-luonteen ja
           molekyylitason suhteen kohtisuoran suunnan?
         * Vaihda LUMO:on. Missä näet hajottavaa luonnetta ja etumerkin vaihtumista?

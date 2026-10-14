@@ -7,7 +7,6 @@ import base64
 # ==========================================
 st.set_page_config(
     page_title="Laskennallinen Kemia",
-    page_icon="⚛️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -61,7 +60,7 @@ if not st.session_state.app_loaded:
             # Added border-radius and box-shadow to make the square background look like a stylized app icon
             img_element = f'<img src="data:image/png;base64,{logo_base64}" style="width: 480px; border-radius: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); animation: pulse 1.5s infinite;">'
         except FileNotFoundError:
-            img_element = '<div style="font-size: 80px; animation: pulse 1.5s infinite;">⚛️</div>'
+            img_element = '<div style="font-size: 80px; animation: pulse 1.5s infinite;">QM</div>'
 
         # Force absolute centering using a 100% width flex container
         st.markdown(f"""
@@ -135,10 +134,10 @@ Pitäkää hauskaa!<br>
     st.markdown("""
     <div class="module-list">
     <b>1. 1D Potentiaalit:</b> Ratkaise Schrödingerin yhtälö numeerisesti ja tarkastele klassisia potentiaalimalleja.<br>
-    <b>2. Laajennettu Hückel:</b> Tutki MO-teoriaa, sidosenergioita ja Wolfsberg-Helmholz -approksimaatiota.<br>
+    <b>2. Laajennettu Hückel:</b> Tutki MO-teoriaa, elektronimiehitystä ja Wolfsberg–Helmholtz-approksimaatiota.<br>
     <b>3. Hartree-Fock (RHF):</b> Syvenny itseytyvän kentän (SCF) menetelmään ja 3D-orbitaalien visualisointiin.<br>
     <b>4. Radiaaliset jakautumafunktiot:</b> Vertaile atomiorbitaalien säteittäisiä jakaumia ja varjostusefektejä.<br>
-    <b>5. Tunneloituminen:</b> Tutki hiukkasen läpäisytodennäköisyyksiä siirtomatriisimenetelmällä.<br>
+    <b>5. Tunneloituminen:</b> Tutki hiukkasen läpäisyä sirontamatriiseilla ja tarkenna kapeat resonanssit näkyviin.<br>
     <b>6. Extrat:</b> Syventävää materiaalia Walsh-diagrammeista ja kiinteän olomuodon kemiasta.
     </div>
     """, unsafe_allow_html=True)
@@ -151,6 +150,9 @@ with col2:
     with st.expander("Ohjeita käyttöön", expanded=True):
         st.write("""
         * **Visualisointi:** Kaikki 3D-mallit ja kuvaajat ovat interaktiivisia.
+        * **Valmiit esimerkit:** Valitse nimetty lähtötilanne ja tutki yhden parametrin vaikutusta kerrallaan.
+        * **Kuvaajat:** Kohdista osoitin käyrään nähdäksesi arvot. Voit rajata näkymää ja tallentaa kuvaajan kuvana.
+        * **HF-orbitaalit:** Valitse energiataso kaaviosta nähdäksesi vastaavan 3D-orbitaalin.
         """)
 
 # Alatunniste

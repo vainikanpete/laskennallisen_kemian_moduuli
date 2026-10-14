@@ -1,241 +1,114 @@
-import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-from math import factorial
+import streamlit as st
+from scipy.integrate import simpson
 
-# ==========================================
-# 1. UI ASETUKSET
-# ==========================================
-st.set_page_config(
-    page_title="Radiaaliset jakautumafunktiot", 
-    layout="wide"
-)
+from plot_style import COLORS, initialise, preset_picker, show_plot
+from qm_models import CLEMENTI_ZEFF, ELEMENTS, radial_orbitals
 
-st.title("Moduuli 4: Radiaaliset jakautumafunktiot")
-st.caption("Atomiorbitaalien säteittäiset osat ja elektronien todennäköisyysjakaumat (Clementi-Raimondi STO)")
+st.set_page_config(page_title="Säteittäiset jakaumat", layout="wide")
+st.title("Moduuli 4: Säteittäiset jakaumat")
+st.caption("Aaltofunktion radiaalinen osa, elektronin sijaintijakauma ja efektiivinen ydinvaraus.")
 st.divider()
+initialise({"rad_element": 6, "rad_max": 8., "rad_scale": False, "rad_orthogonal": True})
+preset_picker("rad", {
+    "Vety: tilavuusvaikutus": {"rad_element": 1, "rad_max": 6., "rad_scale": False, "rad_orthogonal": True},
+    "Litium: ulompi kuori": {"rad_element": 3, "rad_max": 10., "rad_scale": False, "rad_orthogonal": True},
+    "Neon: orbitaalien kutistuminen": {"rad_element": 10, "rad_max": 6., "rad_scale": False, "rad_orthogonal": True},
+    "Natrium: varjostus ja solmut": {"rad_element": 11, "rad_max": 10., "rad_scale": False, "rad_orthogonal": True},
+}, {"Vety: tilavuusvaikutus": "Vertaa R(r):ää ja P(r):ää aivan ytimen lähellä.",
+    "Natrium: varjostus ja solmut": "Vertaa 1s-, 2s- ja 3s-funktioiden laajuutta ja solmuja."})
+st.sidebar.header("Jakauman asetukset")
+atomic_number = st.sidebar.selectbox("Alkuaine", list(ELEMENTS),
+    format_func=lambda z: f"{z} – {ELEMENTS[z]}", key="rad_element")
+r_max = st.sidebar.slider("Kuvaajan yläraja r (a₀)", 2., 20., key="rad_max", step=.5)
+scale_peaks = st.sidebar.checkbox("Skaalaa huiput samaan korkeuteen", key="rad_scale")
+orthogonal = st.sidebar.checkbox("Ortogonalisoidut STO-funktiot", key="rad_orthogonal",
+    help="Saman kulmakvanttiluvun funktiot ortogonalisoidaan. Poista valinta nähdäksesi puhtaat STO:t.")
+st.sidebar.caption("Kuvaajan rajaus ei muuta laskettuja orbitaaleja.")
 
-# ==========================================
-# 2. CLEMENTI-RAIMONDI Z_eff SANAKIRJA (Z=1 - 18)
-# ==========================================
-clementi_zeff = {
-    1: {'1s': 1.0000},
-    2: {'1s': 1.6875},
-    3: {'1s': 2.6906, '2s': 1.2792},
-    4: {'1s': 3.6848, '2s': 1.9120},
-    5: {'1s': 4.6795, '2s': 2.5885, '2p': 2.4214},
-    6: {'1s': 5.6727, '2s': 3.2236, '2p': 3.1358},
-    7: {'1s': 6.6651, '2s': 3.8340, '2p': 3.8312},
-    8: {'1s': 7.6579, '2s': 4.4532, '2p': 4.4532},
-    9: {'1s': 8.6501, '2s': 5.1000, '2p': 5.1000},
-    10: {'1s': 9.6421, '2s': 5.7584, '2p': 5.7584},
-    11: {'1s': 10.6259, '2s': 6.5714, '2p': 6.8018, '3s': 2.5057},
-    12: {'1s': 11.6089, '2s': 7.3920, '2p': 7.4263, '3s': 3.3075},
-    13: {'1s': 12.5910, '2s': 8.2136, '2p': 8.4028, '3s': 4.1112, '3p': 3.5011},
-    14: {'1s': 13.5745, '2s': 9.0338, '2p': 9.3345, '3s': 4.9032, '3p': 4.2852},
-    15: {'1s': 14.5553, '2s': 9.8544, '2p': 10.2631, '3s': 5.6418, '3p': 4.8856},
-    16: {'1s': 15.5381, '2s': 10.6830, '2p': 11.1810, '3s': 6.3682, '3p': 5.4868},
-    17: {'1s': 16.5239, '2s': 11.5300, '2p': 12.0940, '3s': 7.0683, '3p': 6.1169},
-    18: {'1s': 17.5075, '2s': 12.3221, '2p': 13.0062, '3s': 7.7588, '3p': 6.7641}
-}
+@st.cache_data(max_entries=36)
+def calculate(z, orthogonal):
+    return radial_orbitals(z, orthogonal)
 
-atno_to_element = {
-    1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
-    11: 'Na', 12: 'Mg', 13: 'Al', 14: 'Si', 15: 'P', 16: 'S', 17: 'Cl', 18: 'Ar'
-}
+r, orbitals = calculate(atomic_number, orthogonal)
+mask = r <= r_max
+amplitude_tab, probability_tab, theory_tab = st.tabs(
+    ["Säteittäinen aaltofunktio R(r)", "Todennäköisyystiheys P(r)", "Taustaa ja teoria"])
+for tab, probability_mode in [(amplitude_tab, False), (probability_tab, True)]:
+    with tab:
+        fig = go.Figure()
+        reference_peak = None
+        for i, label in enumerate(sorted(orbitals, key=lambda value: (int(value[0]), "spdf".index(value[1])))):
+            function = orbitals[label]
+            values = r*r*function**2 if probability_mode else function.copy()
+            if reference_peak is None:
+                reference_peak = float(np.max(np.abs(values)))
+            plot_values = values.copy()
+            if scale_peaks and i > 0:
+                plot_values *= reference_peak/np.max(np.abs(values))
+            fig.add_trace(go.Scatter(x=r[mask], y=plot_values[mask], mode="lines",
+                name=label + (" (skaalattu)" if scale_peaks and i > 0 else ""),
+                line=dict(color=COLORS[i % len(COLORS)], width=2.5,
+                          dash="dash" if label.endswith("p") else "solid"),
+                customdata=values[mask],
+                hovertemplate="r = %{x:.4f} a₀<br>"+("P(r)" if probability_mode else "R(r)")+
+                              " = %{customdata:.5f}<extra>"+label+"</extra>"))
+        fig.update_layout(title=f"{ELEMENTS[atomic_number]}: {'todennäköisyystiheys' if probability_mode else 'säteittäinen aaltofunktio'}",
+            xaxis_title="Etäisyys ytimestä r (a₀)",
+            yaxis_title=("P(r) (a₀⁻¹)" if probability_mode else "R(r) (a₀⁻³ᐟ²)")+
+                        (" · suhteellinen skaala" if scale_peaks else ""), height=540)
+        show_plot(fig)
+        if scale_peaks:
+            st.caption("Huippujen skaalaus helpottaa muotojen vertailua. Skaalattujen käyrien pinta-ala muuttuu; "
+                       "kohdistustiedot näyttävät alkuperäiset arvot.")
+        if probability_mode:
+            st.latex(r"P(r)=r^2|R(r)|^2,\qquad \int_0^\infty P(r)\,dr=1")
+            st.table([{"Orbitaali": label, "Efektiivinen ydinvaraus": f"{CLEMENTI_ZEFF[atomic_number][label]:.4f}",
+                       "Integraali laskenta-alueella": f"{simpson(r*r*function**2, x=r):.6f}"}
+                      for label, function in orbitals.items()])
+            st.caption("Integraalit lasketaan kiinteällä 0–60 a₀ alueella. Kuvaajan yläraja on erillinen näyttöasetus.")
 
-# ==========================================
-# 3. FYSIKAALISET FUNKTIOT JA ORTOGONALISOINTI
-# ==========================================
-@st.cache_data
-def calculate_sto_radial(n, zeff, r):
-    """
-    Laskee puhtaan Slater-tyyppisen orbitaalin (STO) säteittäisen osan R(r).
-    """
-    zeta = zeff / n 
-    norm = (2 * zeta)**(n + 0.5) / np.sqrt(factorial(2 * n))
-    R_r = norm * (r**(n - 1)) * np.exp(-zeta * r)
-    return R_r
-
-def get_n_from_label(label):
-    return int(label[0])
-
-def get_l_from_label(label):
-    """Erottaa sivukvanttiluvun kirjaimen (s, p, d)"""
-    return label[1]
-
-def orthogonalize_orbitals(sto_dict, r):
-    """
-    Käyttää Gram-Schmidt -ortogonalisointia STO-funktioille.
-    Saman l-kvanttiluvun orbitaalit (esim 1s, 2s, 3s) pakotetaan ortogonaalisiksi.
-    Tämä synnyttää puuttuvat säteittäiset solmukohdat ja takaa fysikaalisuuden!
-    """
-    dr = r[1] - r[0]
-    ortho_orbitals = {}
-    
-    for l_type in ['s', 'p', 'd']:
-        # Haetaan kyseisen l-tyypin orbitaalit järjestyksessä (1s, 2s, 3s...)
-        l_orbs = sorted([orb for orb in sto_dict.keys() if get_l_from_label(orb) == l_type])
-        
-        for i, orb_name in enumerate(l_orbs):
-            psi = sto_dict[orb_name].copy()
-            
-            # Vähennetään aiemmat saman tyypin orbitaalit
-            for j in range(i):
-                prev_orb_name = l_orbs[j]
-                prev_psi = ortho_orbitals[prev_orb_name]
-                
-                # Lasketaan peitto-integraali (Overlap): <prev | psi>
-                overlap = np.trapz(prev_psi * psi * (r**2), x=r)
-                psi -= overlap * prev_psi
-                
-            # Uudelleennormitus: int |psi|^2 r^2 dr = 1
-            norm_sq = np.trapz((psi**2) * (r**2), x=r)
-            psi = psi / np.sqrt(norm_sq)
-            
-            ortho_orbitals[orb_name] = psi
-            
-    return ortho_orbitals
-
-# ==========================================
-# 4. SIVUPALKKI JA PARAMETRIT
-# ==========================================
-st.sidebar.header("Parametrit")
-
-# Alkuaineen valinta
-element_options = {f"{Z} - {sym}": Z for Z, sym in atno_to_element.items()}
-selected_element_str = st.sidebar.selectbox("Valitse alkuaine", list(element_options.keys()), index=5)
-Z = element_options[selected_element_str]
-
-st.sidebar.divider()
-
-# Kuvaajan asetukset
-r_max = st.sidebar.slider("Maksimietäisyys r (Bohr)", 2.0, 20.0, 8.0, 0.5)
-scale_peaks = st.sidebar.checkbox("Skaalaa huiput samaan korkeuteen", value=False, 
-                                  help="Helpottaa uloimpien orbitaalien muodon vertailua 1s-orbitaaliin.")
-
-st.sidebar.divider()
-if st.sidebar.button("🔄 Palauta oletusasetukset"):
-    st.session_state.clear()
-    st.rerun()
-# ==========================================
-# 5. LASKENTA JA VISUALISOINTI
-# ==========================================
-# Käytetään tiheämpää hilaa ja aloitetaan aivan läheltä nollaa tarkan integroinnin takaamiseksi
-r = np.linspace(0.0001, r_max, 2000)
-element_data = clementi_zeff[Z]
-
-# 1. Lasketaan ensin puhtaat STO:t
-raw_stos = {}
-for orb, zeff in element_data.items():
-    n = get_n_from_label(orb)
-    raw_stos[orb] = calculate_sto_radial(n, zeff, r)
-
-# 2. Ortogonalisoidaan ne (Luodaan solmukohdat!)
-real_orbitals = orthogonalize_orbitals(raw_stos, r)
-
-tab1, tab2, tab_taustaa = st.tabs(["Säteittäinen aaltofunktio R(r)", "Radiaalinen jakautumafunktio P(r)", "Taustaa & Teoriaa"])
-
-with tab_taustaa:
+with theory_tab:
     st.markdown(r"""
-    ### Mitä tässä ihmetellään?
+    ### R(r) ja P(r) kuvaavat eri asioita
+    Atomikeskisessä mallissa $\psi(r,\theta,\phi)=R(r)Y_{lm}(\theta,\phi)$.
+    Kulmaosa on normalisoitu: $\int |Y_{lm}|^2d\Omega=1$. Silloin säteittäinen
+    todennäköisyystiheys on **$P(r)=r^2|R(r)|^2$**. Todennäköisyys löytää elektroni
+    säteiden r ja r+dr välistä on P(r)dr.
 
-    Kvanttimekaniikassa atomin elektronin tilaa kuvataan aaltofunktiolla $\psi$. Pallosymmetrisissä systeemeissä (kuten atomit) tämä funktio voidaan jakaa kahteen osaan: kulmaosaan (joka antaa orbitaalille sen tutun 3D-muodon, esim. p-orbitaalin kahdeksikkomaisen muodon) ja **säteittäiseen osaan $R(r)$**, joka riippuu vain etäisyydestä ytimestä.
+    S-orbitaalin koko aaltofunktiolle $\psi=R/\sqrt{4\pi}$ sama asia voidaan kirjoittaa
+    $P(r)=4\pi r^2|\psi(r)|^2$. Näitä R:n ja koko aaltofunktion merkintätapoja tulee
+    käyttää johdonmukaisesti.
 
-    Tässä moduulissa tarkastelemme juuri tätä säteittäistä osaa. 
+    Ytimessä s-elektronin **paikallinen tiheys voi olla äärellinen**, vaikka P(0)=0.
+    Radiaalisen jakauman nolla seuraa pallokuoren tilavuustekijästä. Se ei sulje pois
+    elektronin ja ytimen kontaktivuorovaikutuksia.
 
-    #### $R(r)$ vs. $P(r)$ - Mitä eroa niillä on?
-    1. **Säteittäinen aaltofunktio $R(r)$:** Kertoo puhtaan aaltofunktion amplitudin etäisyyden $r$ funktiona. Ydintä lähestyttäessä ($r \rightarrow 0$) s-orbitaalien $R(r)$ kasvaa kohti maksimia, koska aaltofunktio itsessään on tiheimmillään ytimessä.
-    2. **Radiaalinen jakautumafunktio $P(r)$:** Elektronin todennäköisyys ei riipu vain aaltofunktion neliöstä $R(r)^2$, vaan myös sen alueen koosta, josta elektronia etsitään. Kolmiulotteisessa avaruudessa tietyn säteen $r$ etäisyydellä oleva alue on pallokuori, jonka tilavuus kasvaa kaavalla $4\pi r^2$. Siksi todennäköisyys löytää elektroni tietyltä etäisyydeltä on $P(r) = 4\pi r^2 R(r)^2$. 
+    ### Varjostus ja efektiivinen ydinvaraus
+    Muut elektronit pienentävät elektronin kokemaa ytimen vetovoimaa. Clementin ja
+    Raimondin taulukon arvot kuvaavat tätä yksittäisten STO-funktioiden eksponenttien
+    avulla. Tässä $\zeta=Z_{eff}/n$ ja $R(r)\propto r^{n-1}e^{-\zeta r}$.
+    Kasvava efektiivinen ydinvaraus supistaa malliorbitaalia.
 
-    Vaikka aaltofunktio $R(r)$ on maksimissaan ytimessä, todennäköisyys $P(r)$ on siellä nolla, koska pisteen (ytimen) tilavuus on nolla! $P(r)$ vastaa kysymykseen: *"Jos piirrän pallonkuoren etäisyydelle r, kuinka todennäköisesti elektroni on sen kuoren sisällä?"*
-
-    #### Mitä Clementi-Raimondi -arvot ($Z_{eff}$) ovat?
-    Vetyatomilla on vain yksi elektroni, joka tuntee koko ytimen +1 varauksen. Mutta monielektronisissa atomeissa (esim. Hiili, $Z=6$) uloimmat elektronit eivät tunne koko ytimen vetovoimaa. Sisemmät elektronit ovat ytimen ja ulkoelektronin välissä ja "varjostavat" (shield) osan ytimen positiivisesta varauksesta. 
-
-    Elektroni tuntee siis vain **efektiivisen ydinvarauksen ($Z_{eff}$)**, joka on aina pienempi kuin todellinen varaus $Z$. Vuonna 1963 Enrico Clementi ja D. L. Raimondi laskivat SCF-menetelmällä optimaaliset $Z_{eff}$-arvot atomeille, jotta ne vastaisivat mahdollisimman hyvin todellisia aaltofunktioita käyttäen yksinkertaistettuja Slater-tyyppisiä orbitaaleja (STO). Näitä samoja arvoja ohjelmamme nyt käyttää orbitaalien leveyden ja huipun sijainnin laskemiseen.
+    ### Mitä ortogonalisointi tekee?
+    Puhtaalta STO:lta puuttuvat sisäiset säteittäiset solmut. Gram–Schmidt-menetelmä
+    tekee saman kulmakvanttiluvun funktioista ortogonaalisia ja tuottaa tässä
+    havainnolliset solmut. Rakennetut funktiot ovat opetusmalli; ortogonaalisuus
+    ei yksin osoita, että ne ratkaisevat atomin HF-yhtälöt.
     """)
+    st.caption("Parametrit: Clementi ja Raimondi, J. Chem. Phys. 38, 2686 (1963), taulukko I; Z_eff = nζ.")
 
-# Värikartta orbitaaleille
-colors = {'1s': '#1f77b4', '2s': '#ff7f0e', '2p': '#2ca02c', 
-          '3s': '#d62728', '3p': '#9467bd', '3d': '#8c564b'}
-
-with tab1:
-    st.subheader(f"Säteittäinen aaltofunktio $R(r)$ atomille {atno_to_element[Z]}")
-    st.markdown("Gram-Schmidt ortogonalisoidut aaltofunktiot.")
-    
-    fig1 = go.Figure()
-    max_1s = None
-    
-    for orb, R_r in real_orbitals.items():
-        plot_y = R_r
-        
-        if scale_peaks:
-            if orb == '1s':
-                max_1s = np.max(np.abs(R_r))
-            elif max_1s is not None:
-                scale_factor = max_1s / np.max(np.abs(R_r))
-                plot_y = R_r * scale_factor
-                
-        line_style = 'dash' if 'p' in orb else 'solid'
-        color = colors.get(orb, '#7f7f7f')
-        name_label = f"{orb} (skaalattu)" if scale_peaks and orb != '1s' else orb
-        
-        fig1.add_trace(go.Scatter(x=r, y=plot_y, mode='lines', name=name_label, 
-                                  line=dict(width=3, dash=line_style, color=color)))
-
-    fig1.add_trace(go.Scatter(x=[0, r_max], y=[0, 0], mode='lines', line=dict(color='black', width=1), showlegend=False))
-    
-    fig1.update_layout(xaxis_title="Etäisyys r (Bohr)", yaxis_title="Amplitudi R(r)", height=550, hovermode="x unified")
-    st.plotly_chart(fig1, use_container_width=True)
-
-with tab2:
-    st.subheader(f"Radiaalinen jakautumafunktio $4\pi r^2 R(r)^2$ atomille {atno_to_element[Z]}")
-    st.markdown("Kertoo todennäköisyyden löytää elektroni tietyltä etäisyydeltä ytimestä. Integroituna yli koko avaruuden antaa tulokseksi tasan 1.")
-    
-    fig2 = go.Figure()
-    max_1s_rdf = None
-    
-    for orb, R_r in real_orbitals.items():
-        RDF = (r**2) * (R_r**2)
-        plot_y_rdf = RDF
-        
-        # Testataan, että pinta-ala (integraali) on oikeasti 1!
-        integral = np.trapz(RDF, r)
-        integral_text = f" (Pinta-ala = {integral:.2f})"
-        
-        if scale_peaks:
-            if orb == '1s':
-                max_1s_rdf = np.max(RDF)
-            elif max_1s_rdf is not None:
-                scale_factor_rdf = max_1s_rdf / np.max(RDF)
-                plot_y_rdf = RDF * scale_factor_rdf
-                
-        line_style = 'dash' if 'p' in orb else 'solid'
-        color = colors.get(orb, '#7f7f7f')
-        name_label = f"{orb} (skaalattu)" if scale_peaks and orb != '1s' else orb
-        
-        fig2.add_trace(go.Scatter(x=r, y=plot_y_rdf, mode='lines', name=name_label + integral_text, 
-                                  line=dict(width=3, dash=line_style, color=color), fill='tozeroy', opacity=0.5,
-                                  hovertemplate="<b>%{data.name}</b><br>Etäisyys: %{x:.2f} Bohr<br>P(r): %{y:.4f}<extra></extra>"))
-
-    fig2.update_layout(xaxis_title="Etäisyys r (Bohr)", yaxis_title="Todennäköisyystiheys P(r)", height=550, hovermode="x unified")
-    st.plotly_chart(fig2, use_container_width=True)
-
-# ==========================================
-# 6. PEDAGOGINEN OSIO
-# ==========================================
-st.markdown("---")
-with st.expander("Kysymyksiä ja huomioita"):
+with st.expander("Kysymyksiä ja kokeiltavaa"):
     st.markdown(r"""
-    **1. Volyymiefekti ja ydin:** Valitse alkuaineeksi Vety (H) ja vertaa $R(r)$ ja $P(r)$ kuvaajia. Miksi $R(r)$ on maksimissaan täsmälleen ytimessä ($r=0$), mutta $P(r)$ lähtee nollasta? Mitä tämä kertoo elektronin mahdollisuudesta "törmätä" ytimeen?
-
-    **2. Efektiivinen ydinvaraus ja atomin koko:** Aseta r-akselin maksimiksi 6 Bohr. Vaihda alkuaineeksi ensin Litium (Z=3) ja kelaa sitten valikkoa alaspäin kohti Neonia (Z=10). Seuraa 2s- ja 2p-orbitaalien $P(r)$ huippujen sijaintia. 
-    Mitä huomaat? Vaikka pääkvanttiluku pysyy samana ($n=2$), miksi orbitaalit kutistuvat lähemmäs ydintä, kun liikutaan jaksoa oikealle? *(Vinkki: Katso sivupalkin yläpuolelta Z-arvon kasvua ja mieti ytimen vetovoimaa).*
-
-    **3. Varjostus (Shielding):** Valitse natrium. Katso 1s, 2s ja 3s -orbitaalien todennäköisyysjakaumia. Koska 1s ja 2s ovat fyysisesti paljon lähempänä ydintä, ne varjostavat ytimen varausta. Natriumin $Z=11$, mutta Clementi-Raimondi -taulukon mukaan 3s-elektroni tuntee vain efektiivisen varauksen $Z_{eff} \approx 2.5$. Miten tämä varjostus selittää alkalimetallien (kuten Na) suuren reaktiivisuuden ja taipumuksen luovuttaa uloin elektroninsa?
-
-    **4. STO-funktion rajat (Puuttuvat solmukohdat):**
-    Tämä työkalu käyttää oletuksena puhtaita Slater-orbitaaleja (STO). Kvanttimekaniikan teorian mukaan aaltofunktiolla on $n - l - 1$ säteittäistä solmukohtaa (kohtaa, jossa $R(r) = 0$). Siten esimerkiksi 2s-orbitaalilla pitäisi olla yksi solmukohta ja 3s-orbitaalilla kaksi. 
-    Yksittäisillä STO-funktioilla ei ole sisäänrakennettuja säteittäisiä solmuja. Tästä syystä taustalla rullaava koodi pakottaa orbitaalit ortogonaalisiksi (Gram-Schmidt -menetelmä), jolloin näet puuttuvat solmukohdat aivan kuten oikeissakin laskuissa!
+    1. **Tilavuustekijä:** Valitse vety ja vertaa R(r):ää sekä P(r):ää ytimen lähellä.
+       Miksi niiden maksimit ovat eri kohdissa?
+    2. **Jaksollisuus:** Vertaa litiumin ja neonin 2s-jakaumia sekä neonin 2p-jakaumaa.
+       Miten efektiivinen ydinvaraus auttaa selittämään eron?
+    3. **Varjostus:** Valitse natrium. Vertaa sisäkuorten ja 3s-funktion laajuutta.
+       Miten tämä liittyy uloimman elektronin helppoon irtoamiseen?
+    4. **Solmut:** Vaihda puhtaiden ja ortogonalisoitujen STO-funktioiden välillä.
+       Laske 2s- ja 3s-funktioiden sisäiset solmut. Mitä ortogonaalisuus edellyttää?
+    5. **Rajaus:** Muuta vain kuvaajan ylärajaa. Funktioiden arvot samoilla etäisyyksillä
+       säilyvät, vaikka osa jakaumasta jää kuvan ulkopuolelle.
     """)
