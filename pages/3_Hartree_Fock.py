@@ -105,44 +105,70 @@ with tab_historia:
 
 
 with tab_teoria:
+    st.subheader("Mitä Hartree-Fock-moottori tekee?")
     st.markdown(r"""
-    ### Mitä Hartree-Fock-moottori tekee?
-
     **1. Kiinteä geometria ja Born–Oppenheimer-approksimaatio**
+
     Elektronirakenne ratkaistaan annetuilla ydinten koordinaateilla. Näytetty
     kokonaisenergia on elektroninen energia sekä ytimien välinen repulsio.
     Ydinten värähtelyenergia ja lämpötilan vaikutukset eivät sisälly siihen.
-
+    """)
+    st.markdown(r"""
     **2. LCAO ja STO-3G-kantajoukko**
+
     Molekyyliorbitaalit rakennetaan atomikeskisistä kantafunktioista:
-    $$\psi_i = \sum_\mu C_{\mu i}\phi_\mu.$$
+    """)
+    st.latex(r"\psi_i = \sum_\mu C_{\mu i}\phi_\mu")
+    st.markdown(r"""
     STO-3G on minimaalinen kantajoukko. C-, N- ja O-atomeilla on ydin-1s,
     valenssi-2s ja kolme 2p-funktiota; vedyllä yksi 1s-funktio. Kukin supistettu
     funktio muodostuu kolmesta Gaussin funktiosta. S- ja p-funktioilla on omat
     supistuskertoimensa.
-
+    """)
+    st.markdown(r"""
     **3. Aidot integraalit ja Fock-matriisi**
+
     PySCF laskee peittomatriisin, kineettisen energian, ytimen vetovoiman ja
     elektronien repulsiointegraalit tästä samasta kantajoukosta. P-orbitaalien
     kulmariippuvuus sisältyy integraaleihin.
-    $$F_{\mu\nu}=H^{core}_{\mu\nu}+\sum_{\lambda\sigma}P_{\lambda\sigma}
-    \left[(\mu\nu|\lambda\sigma)-\frac12(\mu\lambda|\nu\sigma)\right].$$
+    """)
+    st.latex(r"""
+        F_{\mu\nu}=H^{\mathrm{core}}_{\mu\nu}
+        +\sum_{\lambda\sigma}P_{\lambda\sigma}
+        \left[(\mu\nu|\lambda\sigma)
+        -\frac{1}{2}(\mu\lambda|\nu\sigma)\right]
+    """)
+    st.markdown(r"""
     Coulomb-termi kuvaa elektronien repulsiota. Vaihtotermi seuraa
     antisymmetrisestä Slaterin determinantista.
-
+    """)
+    st.markdown(r"""
     **4. Itseytyvä kenttä ja tiheyden sekoitus**
+
     Ratkaisemme Roothaan–Hall-yhtälön $FC=SCE$. Miehitetyt orbitaalit antavat
     uuden tiheyden $P_{uusi}$, jota sekoitetaan edelliseen tiheyteen:
-    $$P_{seuraava}=(1-mix)P_{edellinen}+mix\,P_{uusi}.$$
+    """)
+    st.latex(r"""
+        P_{\mathrm{seuraava}}=(1-\mathrm{mix})P_{\mathrm{edellinen}}
+        +\mathrm{mix}\,P_{\mathrm{uusi}}
+    """)
+    st.markdown(r"""
     Alkutiheys sisältää oikean määrän elektroneja, ja sekoitus säilyttää määrän.
     Energia lasketaan aina saman tiheyden ja siitä rakennetun Fock-matriisin avulla:
-    $$E=\frac12\sum_{\mu\nu}P_{\mu\nu}
-    (H^{core}_{\mu\nu}+F_{\mu\nu})+E_{ydinrepulsio}.$$
+    """)
+    st.latex(r"""
+        E=\frac{1}{2}\sum_{\mu\nu}P_{\mu\nu}
+        \left(H^{\mathrm{core}}_{\mu\nu}+F_{\mu\nu}\right)
+        +E_{\mathrm{ydinrepulsio}}
+    """)
+    st.markdown(r"""
     Suppeneminen tarkistetaan energian muutoksesta, tiheyden itsekonsistenssista
     ja SCF-yhtälön jäännöksestä. Pelkkä iteraatiorajan saavuttaminen ei tarkoita
     suppenemista. DIIS käyttää aiempia Fock-matriiseja suppenemisen nopeuttamiseen.
-
+    """)
+    st.markdown(r"""
     **5. Mitä tuloksista voi päätellä?**
+
     Tämä on aito suljetun kuoren RHF/STO-3G-laskenta. HF sisältää vaihtovuorovaikutuksen,
     mutta elektronien korreloitu liike yhden determinantin kuvauksen ulkopuolella
     puuttuu. Minimaalinen kantajoukko rajoittaa etenkin virtuaalisten orbitaalien
